@@ -3,18 +3,39 @@
 namespace App\Http\Controllers\Admin;
 use App\Post;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth; 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PostController extends Controller
 {
+    private $validateRules;
+
+    public function __construct()
+    {
+    
+        $this->validateRules = [
+            'title' => 'required|string|max:255',
+            'body' => 'required|string'
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        //
+    {   
+        //Con questo chiamo tutta la tabella Post
+        // $posts = Post::all();
+
+        //Questa chiamata al database mi permette di vedere tutti i post per ID autenticato
+        $posts = Post::where('user_id', Auth::id())->get();
+
+        return view('admin.posts.index', compact('posts'));
+
     }
 
     /**
@@ -35,7 +56,24 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $idUser = Auth::user()->id;
+
+        $request->validate($this->validateRules);
+        $data = $request->all();
+
+        $newPost = new Post;
+        $newPost->title = $data['title'];
+        $newPost->body = $data['body'];
+        $newPost->user_id = $idUser;
+        $newPost->slug = Str::finish(Str::slug($newPost->title), rand(1, 1000000));
+
+        $saved = $newPost->save();
+        if(!$saved) {
+            return redirect()->back();
+        }
+
+        return redirect()->route('admin.posts.show', $newPost->slug);
+
     }
 
     /**
@@ -44,9 +82,11 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        //
+        $post = Post::where('slug', $slug)->first();
+
+        return view('admin.posts.show', compact('post'));
     }
 
     /**
@@ -55,9 +95,12 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($slug)
     {
-        //
+        $post = Post::where('slug', $slug)->first();
+        return view('admin.posts.edit', compact('post'));
+
+    
     }
 
     /**
@@ -69,7 +112,34 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        //Prendo l'ID dell'utente autenticato
+        $idUser = Auth::user()->id;
+        //Se il Post esiste
+        if(empty($post)){
+            abort(404);
+        }
+        //L'ID del l'User è diverso dal l'ID autenticato
+        if($post->user->id != $idUser){
+            abort(404);
+        }
+
+        $request->validate($this->validateRules);
+        $data = $request->all();
+
+        $post->title = $data['title'];
+        $post->body = $data['body'];
+        $post->slug = Str::finish(Str::slug($post->title), rand(1, 1000000));
+        //Usiamo carbon per aggiornare la data
+        $post->updated_at = Carbon::now();
+
+        $updated = $post->update();
+
+        if (!$updated) {
+            return redirect()->back();
+        }
+
+        return redirect()->route('admin.posts.show', $post->slug);
+
     }
 
     /**
@@ -78,8 +148,15 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        if(empty($post)) {
+            abort(404);
+        }
+
+        $post->delete();
+        //Appena viene cancellato l’item ritorniamo alla pagina index
+        return redirect()->route('admin.posts.index');
+
     }
 }
