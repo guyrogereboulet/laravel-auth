@@ -57,28 +57,39 @@ class PostController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
+     
+     
     public function store(Request $request)
     {
         $idUser = Auth::user()->id;
+        
 
         $request->validate($this->validateRules);
         $data = $request->all();
-
         $path = Storage::disk('public')->put('img', $data['img']);
+        
 
         $newPost = new Post;
+        $newPost->img = $path;
         $newPost->title = $data['title'];
         $newPost->body = $data['body'];
         $newPost->user_id = $idUser;
         $newPost->slug = Str::finish(Str::slug($newPost->title), rand(1, 1000000));
-
-        $newPost->images = $path;
         
-
         $saved = $newPost->save();
+
+        
         if(!$saved) {
             return redirect()->back();
         }
+
+        $tags = $data['tags'];
+        if(!empty($tags)) {
+            $newPost->tags()->attach($tags);
+        }
+
+    
 
         return redirect()->route('admin.posts.show', $newPost->slug);
 
