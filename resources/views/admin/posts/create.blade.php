@@ -17,10 +17,13 @@
 
           </textarea>
         </div>
-                                                                                                   
+            <div class="form-group"> <label for="tags">Tags</label> @foreach ($tags as $tag) <div> <span>{{$tag->name}}</span> <input type="checkbox" name="tags[]" value="{{$tag->id}}"> </div> @endforeach 
+          </div>                        
         <button class="btn btn-success" type="submit">Salva</button>
       </form>
     </div>
   </div>
+
+  
     
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Post;
+use App\Tag;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth; 
 use Illuminate\Http\Request;
@@ -45,7 +46,8 @@ class PostController extends Controller
      */
     public function create()
     {
-        //
+        $tags = Tag:: all();
+        return view('admin.posts.create', compact('tags'));
     }
 
     /**
@@ -110,7 +112,7 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
         //Prendo l'ID dell'utente autenticato
         $idUser = Auth::user()->id;
