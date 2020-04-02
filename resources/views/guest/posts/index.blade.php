@@ -8,18 +8,18 @@
           @endauth
           @foreach ($posts as $post)
               <div class="card mt-3 mb-3">
-                <h2>{{$post->title}}></h2>
+                <h2>{{$post->title}}</h2>
                 <small>Scritto da: {{$post->user->name}}</small>
                 <div>
                   {{$post->body}}
                 </div>
               <div>
-                {{-- tags:
+                tags:
                 @forelse ($post->tags as $tag)
                   {{$tag->name}} 
                 @empty
                   No tag
-                @endforelse --}}
+                @endforelse
               </div>
               <a href="{{route('posts.show', $post->slug)}}">Leggi</a>
               </div>

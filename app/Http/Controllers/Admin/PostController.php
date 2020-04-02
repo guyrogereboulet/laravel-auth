@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -63,11 +64,16 @@ class PostController extends Controller
         $request->validate($this->validateRules);
         $data = $request->all();
 
+        $path = Storage::disk('public')->put('img', $data['img']);
+
         $newPost = new Post;
         $newPost->title = $data['title'];
         $newPost->body = $data['body'];
         $newPost->user_id = $idUser;
         $newPost->slug = Str::finish(Str::slug($newPost->title), rand(1, 1000000));
+
+        $newPost->images = $path;
+        
 
         $saved = $newPost->save();
         if(!$saved) {
@@ -100,7 +106,16 @@ class PostController extends Controller
     public function edit($slug)
     {
         $post = Post::where('slug', $slug)->first();
-        return view('admin.posts.edit', compact('post'));
+        $tags = Tag::all();
+        // $images = Image::all();
+
+        $data = [
+            'tags' => $tags,
+            'post' => $post,
+            // 'images' => $images
+        ];
+        
+        return view('admin.posts.edit', $data);
 
     
     }
